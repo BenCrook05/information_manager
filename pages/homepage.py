@@ -125,7 +125,7 @@ class Home(UserControl):
     def run_background_tasks(self):
         self.__unable_to_logout = True
         self.__download_full_passwords(just_started = True)
-        self.__manager.validate_client_public_key()
+        # self.__manager.validate_client_public_key()
         self.__unable_to_logout = False
     
     def destination_change(self, e):

@@ -6,7 +6,7 @@ import socket
 import traceback
 import backEnd.passwords as Pw
 from backEnd.encryption import Encrypt, Decrypt, Generate
-from backEnd.AsymmetricEncryption.endToEnd_encryption import AsyncRSA as rsa
+# from backEnd.AsymmetricEncryption.endToEnd_encryption import AsyncRSA as rsa
 from backEnd.hasher import Hash
 from backEnd.scan import PasswordChecker, PasswordGenerator
 from backEnd.loginlogic import Application

@@ -4,8 +4,6 @@ from cryptography.fernet import Fernet
 import hashlib
 import uuid
 import binascii
-import backEnd.AsymmetricEncryption.endToEnd_encryption as rsa
-import backEnd.SymmetricEncryption.XorEncryption as xor
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 import random
@@ -54,19 +52,6 @@ def encryptdecrypt(data: str, key: str, encrypt: bool):
         return cipher_suite.decrypt(data.encode('utf-8')).decode('utf-8')
 
 class Encrypt:
-    @staticmethod
-    def encrypt_key_to_server(data, public_key):
-        e, n = public_key
-        encrypted_key = rsa.AsyncRSA.encrypt_symmetric_key(data, e, n)
-        print(f"encrypted_key: {encrypted_key}")
-        return encrypted_key
-    
-    @staticmethod
-    def encrypt_data_to_server(data, key):
-        # encryptor = xor.XorEncryption()
-        # encrypted_data = encryptdecrypt_directory(data, key, encryptor)
-        encrypted_data = encryptdecrypt_directory(data, key, True)
-        return encrypted_data
 
     @staticmethod
     def encrypt_password_key_to_share(password_key, symmetric_key):
@@ -85,8 +70,7 @@ class Encrypt:
 
     @staticmethod
     def encrypt_symmetric_key_sharing(symmetric_key, e, n):
-        encrypted_key = rsa.AsyncRSA.encrypt_symmetric_key(symmetric_key, e, n, increments=3)
-        return encrypted_key
+        return symmetric_key
 
     @staticmethod
     def encrypt_password_key(password_key,client_permanent_key):
@@ -103,18 +87,6 @@ class Encrypt:
     
     
 class Decrypt:
-    @staticmethod
-    def decrypt_key_from_server(data, private_key):
-        d, n = private_key
-        decrypted_key = rsa.AsyncRSA.decrypt_symmetric_key(data, d, n)
-        return decrypted_key
-    
-    @staticmethod
-    def decrypt_data_from_server(data, key):
-        # encryptor = xor.XorEncryption()
-        # decrypted_data = encryptdecrypt_directory(data, key, encryptor)
-        decrypted_data = encryptdecrypt_directory(data, key, False)
-        return decrypted_data
 
     @staticmethod
     def decrypt_password_key_to_share(password_key, symmetric_key):
@@ -132,8 +104,7 @@ class Decrypt:
 
     @staticmethod
     def decrypt_symmetric_key_sharing(symmetric_key, d, n):
-        decrypted_key = rsa.AsyncRSA.decrypt_symmetric_key(symmetric_key, d, n, increments=3)
-        return decrypted_key
+        return symmetric_key
 
     @staticmethod #symmetric decryption
     def decrypt_password_key(password_key,client_permanent_key):
@@ -153,13 +124,7 @@ class Decrypt:
 class Generate:
     @staticmethod
     def generate_asymmetric_keys():
-        e, d, n = rsa.AsyncRSA.generate_keys()
-        e = int(e)
-        n = int(n)
-        d = int(d)
-        public_key = [e, n]
-        private_key = [d, n]
-        return public_key, private_key
+        return [1,2,3]
 
 
     @staticmethod
@@ -177,20 +142,21 @@ class Generate:
     
     @staticmethod
     def generate_client_permanent_key(client_permanent_key: bytes):
-        #derives from password and month/year
-        client_permanent_key = str(client_permanent_key)
-        current_date = str(datetime.now().strftime("/%m/%Y"))
-        permanent_key_integer_list = list(map(ord,(client_permanent_key)))
-        permanent_key_string_list = list(map(str, permanent_key_integer_list))
-        permanent_key_string = ''.join(permanent_key_string_list)
-        permanent_key_integer = int(permanent_key_string)
-        date_no_characters = re.sub(r'\D', '', current_date)
-        date_integer = int(date_no_characters)
-        data_string = str(permanent_key_integer % date_integer)
-        data_integer_list = list(map(ord, data_string))
-        data_integer_string = ''.join(list(map(str, data_integer_list)))
-        e, d, n = rsa.AsyncRSA.generate_keys(random=False, seed=data_integer_string)
-        return (e,d,n)
+        # #derives from password and month/year
+        # client_permanent_key = str(client_permanent_key)
+        # current_date = str(datetime.now().strftime("/%m/%Y"))
+        # permanent_key_integer_list = list(map(ord,(client_permanent_key)))
+        # permanent_key_string_list = list(map(str, permanent_key_integer_list))
+        # permanent_key_string = ''.join(permanent_key_string_list)
+        # permanent_key_integer = int(permanent_key_string)
+        # date_no_characters = re.sub(r'\D', '', current_date)
+        # date_integer = int(date_no_characters)
+        # data_string = str(permanent_key_integer % date_integer)
+        # data_integer_list = list(map(ord, data_string))
+        # data_integer_string = ''.join(list(map(str, data_integer_list)))
+        # e, d, n = rsa.AsyncRSA.generate_keys(random=False, seed=data_integer_string)
+        # return (e,d,n)
+        return [1,2,3]
     
     @staticmethod
     def generate_fernet(extra=""):
@@ -208,13 +174,13 @@ class Generate:
     
     @staticmethod
     def validate_symmetric_key(encrypted_symmetric_key, max_length=600000):
-        keys = encrypted_symmetric_key.split("-")
-        keys.remove("")
-        keys = list(map(int, keys))
-        for key in keys:
-            if key >= max_length:
-                time.sleep(0.00001)  #gives .dll opportunity to reset random time seed
-                return False
+        # keys = encrypted_symmetric_key.split("-")
+        # keys.remove("")
+        # keys = list(map(int, keys))
+        # for key in keys:
+        #     if key >= max_length:
+        #         time.sleep(0.00001)  #gives .dll opportunity to reset random time seed
+        #         return False
         return True
     
     @staticmethod

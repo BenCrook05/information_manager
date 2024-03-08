@@ -217,49 +217,6 @@ class Encryption:
             key += random_char
         return key
 
-    @staticmethod
-    def encrypt_key_to_client(data, client_public_key):
-        e, n = client_public_key
-        encrypted_key = rsa.AsyncRSA.encrypt_symmetric_key(data, e, n)
-        return encrypted_key
-
-    @staticmethod
-    def encrypt_data_to_client(data, symmetric_key):
-        # encryptor = xor.XorEncryption()
-        # encrypted_data = Encryption.encryptdecrypt_directory(data, symmetric_key, encryptor)
-        encrypted_data = Encryption.encryptdecrypt_directory(data, symmetric_key, True)
-        return encrypted_data
-
-    @staticmethod
-    def decrypt_key_from_client(data):
-        d, n = Encryption.get_server_key(0)
-        #print(f"Encrypted key: {data}")
-        decrypted_key = rsa.AsyncRSA.decrypt_symmetric_key(data, d, n)
-        return decrypted_key
-
-    @staticmethod
-    def decrypt_data_from_client(data, symmetric_key):
-        # encryptor = xor.XorEncryption()
-        # decrypted_data = Encryption.encryptdecrypt_directory(data, symmetric_key, encryptor)
-        decrypted_data = Encryption.encryptdecrypt_directory(data, symmetric_key, False)
-        return decrypted_data
-
-    @staticmethod
-    def create_error_check(length=16):
-        modulus = random.randint(100,999)
-        divisor = random.randint(10**(length-3), 10**(length-2)-1)
-        integer_div = divisor // modulus
-        real_divisor = integer_div * modulus
-        return str(modulus)+str(real_divisor)
-
-    @staticmethod
-    def validate_error_check(data):
-        modulus = int(data[:3])
-        real_divisor = int(data[3:])
-        if real_divisor % modulus == 0:
-            return True
-        else:
-            return False
 
 
 
@@ -1378,19 +1335,16 @@ def insert_pending_keys(data):
 def receive_data():
     try:
         json_data = request.get_json()
-        encrypted_symmetric_key = json_data["encrypted_symmetric_key"]
         ### DECRYPT SYMMETRIC KEY ###
-        symmetric_key = Encryption.decrypt_key_from_client(encrypted_symmetric_key)
         ### DECRYPT DATA ###
-        encrypted_data = json_data["request_data"]
-        data = Encryption.decrypt_data_from_client(encrypted_data, symmetric_key)
+        data = json_data["request_data"]
         header = json_data["request_header"]
         
         if header == "get_server_key":
             data_to_return = Encryption.get_server_key() #no data do can't error check
             flag = "encryption success"
                 
-        elif Encryption.validate_error_check(data["error_check"]):
+        else:
             if header == "reset_client_sharing_key":
                 data_to_return = Encryption.reset_client_sharing_keys(data)
 
@@ -1471,36 +1425,20 @@ def receive_data():
                     
             flag = "encryption success"
             
-        else:
-            flag = "encryption fail"
-            write_errors(data,"Error check")
-            data_to_return = None
             
         
-        client_public_key = json_data["client_public_key"]
-        symmetric_key = Encryption.generate_symmetric_key()
-        write_errors(symmetric_key,"Symmetric Key to send")
         dic_to_send = {
             "data": data_to_return,
-            "error_check": Encryption.create_error_check(),
         }
-        encrypted_data = Encryption.encrypt_data_to_client(dic_to_send, symmetric_key)
-        encrypted_symmetric_key = Encryption.encrypt_key_to_client(symmetric_key, client_public_key)
-        
-
 
         return jsonify({
-            "data":encrypted_data,
-            "encrypted_symmetric_key":encrypted_symmetric_key,
-            "flag":flag,
+            "data":dic_to_send,
         })
 
     except Exception as e:
         write_errors(traceback.format_exc(),"Handle")
-        write_errors(encrypted_symmetric_key,"Handle: encrypted_symmetric_key")
-        write_errors(symmetric_key,"Handle: symmetric_key")
         write_errors(data,"Handle: data")
-        return jsonify({"data":["FAILED AT HANDLE",str(e)]})
+        return jsonify({"data":["FAILED",str(e)]})
 
 
 if __name__ == '__main__':
